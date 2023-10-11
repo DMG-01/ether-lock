@@ -1,14 +1,33 @@
 //SPDX-License-Identifier:MIT
+// change all require statement
+
+
+
+/*
+adding the get userID 
+after calling the deposit function the userId would be generated
+it works with the userLocks array
+
+create a counter
+return the current counter number after the deposit function has been called
+thats the userId
+store  each userId
+create a mapping to track the address to the userID's array
+
+*/
 pragma solidity^ 0.8.18;
 
 contract fundsLock {
 /* ERROR */
 error invalidAmountPassed();
 error noFundFound();
+error invalidUserIdPassed();
+error invalidUser();
 
 
 /* STATE VARIABLE */
 uint256 totalAmount;
+uint256 userIdCounter;
 address owner;
 
 /* MODIFIER */
@@ -40,13 +59,15 @@ struct userDetails {
 // and the other is a mapping of user to the fund details
 
 userDetails[]  userLocks;
-mapping(address => userDetails[]) addressToDifferentLocks;
+uint256[] userIds;
+mapping(address  => userDetails[]) addressToDifferentLocks;
 mapping (address => userDetails) addressToUserDetails;
+mapping (address => uint256[]) addressToUserIds;
 
 //function to set depositfund with time
 // deposits fund by assigning values to the user details then creating a new userDetail and pushing it into the array
 // PS: I MAY NEED TO DO THE MAPPING OF ADDRESS TO THE ARRAY
-function depositFunds(uint256 _timelock, string memory _password) payable public {
+function depositFunds(uint256 _timelock, string memory _password) payable public  returns(uint256){
 
 if ((msg.value == 0) || (msg.value < 0)) {
  revert invalidAmountPassed();
@@ -59,6 +80,7 @@ addressToUserDetails[msg.sender].ripeTime = block.timestamp + _timelock;
 addressToUserDetails[msg.sender].user = msg.sender;
 totalAmount += msg.value;
 
+
 userDetails memory UserDetails = userDetails(
   _timelock,
   _password,
@@ -68,10 +90,16 @@ userDetails memory UserDetails = userDetails(
   msg.sender
 );
 userLocks.push(UserDetails);
+//userIdCounter++;
+uint256 newUserId = userIdCounter++;
+//addressToUserIds[msg.sender] = userIds.push(newUserId); WORK HERE
+userIds.push(newUserId);
+return (newUserId);
+
 }
 
 // function to withdraw 
-// uses an index to get the specific fund thhat the user wants to withdraw
+// uses an index to get the specific fund that the user wants to withdraw
 //if the requirement is met
 
 function withdrawal(string memory __password, uint256 _index) public payable {
@@ -110,14 +138,28 @@ else {
 }
 }
 
-function getUserDepositedAmount() public view returns(uint256) {
-  return(addressToUserDetails[msg.sender].amount);
+function getUserDepositedAmount( uint256 index_) public view returns(uint256) {
+  if((index_ > userLocks.length) || (index_ < 0)) {
+    revert invalidUserIdPassed();
+  }
+  if(msg.sender != userLocks[index_].user) {
+    revert invalidUser();
+  }
+  return( userLocks[index_].amount);
 }
 function allUserDetails(uint256 index_) public view returns(userDetails memory) {
-  require(msg.sender == userLocks[index_].user,"YOU CAN CALL THIS FUNCTION WITH THIS INDEX");
+  if(msg.sender != userLocks[index_].user) {
+    revert invalidUser();
+  }
   return( userLocks[index_]);
 }
+function getAllUserFundId() public view returns(uint256[] memory) {
+ return(addressToUserIds[msg.sender]);
+}
 
+function getOwner() public view returns(address) {
+  return(owner);
+}
 }
 //give user a number that would be used to withdraw
 // make the password harder ---- removed too expensive
