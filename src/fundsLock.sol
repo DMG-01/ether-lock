@@ -41,6 +41,7 @@ modifier onlyOwner() {
 /* CONSTRUCTOR */
 constructor() {
   owner = msg.sender;
+  userIdCounter = 0;
 }
 
 // a struct that contains all the details of every 'FUND' that is locked
@@ -94,7 +95,7 @@ userLocks.push(UserDetails);
 uint256 newUserId = userIdCounter++;
 //addressToUserIds[msg.sender] = userIds.push(newUserId); WORK HERE
 userIds.push(newUserId);
-return (newUserId);
+return (newUserId - 1);
 
 }
 
@@ -153,12 +154,16 @@ function allUserDetails(uint256 index_) public view returns(userDetails memory) 
   }
   return( userLocks[index_]);
 }
+
 function getAllUserFundId() public view returns(uint256[] memory) {
- return(addressToUserIds[msg.sender]);
+    return addressToUserIds[msg.sender];
+}
+function getCurrentUserId() public view returns(uint256) {
+   return userIdCounter - 0;
 }
 
-function getOwner() public view returns(address) {
-  return(owner);
+function getCurrentUser() public view returns(address) {
+  return(msg.sender);
 }
 }
 //give user a number that would be used to withdraw
